@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'homepage.dart';
 import 'add_submission_page.dart';
 import 'notification_page.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -11,10 +13,23 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  bool isEditing = false;
   final TextEditingController nameController = TextEditingController(text: 'Dinux Fernando');
-  final TextEditingController phoneController = TextEditingController(text: '0771234567');
+  final TextEditingController phoneController = TextEditingController(text: '0711234567');
   final TextEditingController emailController = TextEditingController(text: 'abcd@gmail.com');
   final TextEditingController passwordController = TextEditingController(text: 'password');
+
+  File? _profileImage;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickImage(ImageSource source) async {
+    final pickedFile = await _picker.pickImage(source: source, imageQuality: 85);
+    if (pickedFile != null) {
+      setState(() {
+        _profileImage = File(pickedFile.path);
+      });
+    }
+  }
 
   void _showProfilePictureOptions() {
     showModalBottomSheet(
@@ -28,21 +43,39 @@ class _ProfilePageState extends State<ProfilePage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: const Icon(Icons.image, color: Color(0xFF1A3C6B)),
-                title: const Text('Choose profile picture'),
-                onTap: () {
-                  // Add image picker logic here
+                leading: const Icon(Icons.photo_library, color: Color(0xFF1A3C6B)),
+                title: const Text('Choose from Gallery'),
+                onTap: () async {
                   Navigator.pop(context);
+                  await _pickImage(ImageSource.gallery);
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.remove_red_eye, color: Color(0xFF1A3C6B)),
-                title: const Text('See profile picture'),
-                onTap: () {
-                  // Add view logic here
+                leading: const Icon(Icons.camera_alt, color: Color(0xFF1A3C6B)),
+                title: const Text('Take a Photo'),
+                onTap: () async {
                   Navigator.pop(context);
+                  await _pickImage(ImageSource.camera);
                 },
               ),
+              if (_profileImage != null)
+                ListTile(
+                  leading: const Icon(Icons.remove_red_eye, color: Color(0xFF1A3C6B)),
+                  title: const Text('See profile picture'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    showDialog(
+                      context: context,
+                      builder: (context) => Dialog(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Image.file(_profileImage!, fit: BoxFit.cover),
+                        ),
+                      ),
+                    );
+                  },
+                ),
             ],
           ),
         );
@@ -57,23 +90,43 @@ class _ProfilePageState extends State<ProfilePage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Custom header with white border
-            Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF1A3C6B), Color(0xFF3B6BA5)],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // Blue curved header
+                ClipPath(
+                  clipper: ProfileCurveClipper(),
+                  child: Container(
+                    height: 200,
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF1A3C6B), Color(0xFF3B6BA5)],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 40),
+                        child: Text(
+                          nameController.text,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 26,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-                border: Border(
-                  top: BorderSide(color: Colors.white, width: 40),
-                ),
-              ),
-              padding: const EdgeInsets.only(top: 16, bottom: 16, left: 16, right: 16),
-              child: Row(
-                children: [
-                  IconButton(
+                // Back arrow
+                Positioned(
+                  top: 36,
+                  left: 12,
+                  child: IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.black),
                     onPressed: () {
                       Navigator.pushReplacement(
@@ -82,116 +135,133 @@ class _ProfilePageState extends State<ProfilePage> {
                       );
                     },
                   ),
-                  const Expanded(
-                    child: Center(
-                      child: Text(
-                        'Dinux Fernando',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.w600,
+                ),
+                // Profile picture (overlapping curve) with camera icon always visible
+                Positioned(
+                  top: 140,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        GestureDetector(
+                          onTap: _showProfilePictureOptions,
+                          child: Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.08),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: _profileImage == null
+                                ? const Icon(Icons.person, size: 60, color: Color(0xFF1A3C6B))
+                                : ClipOval(
+                                    child: Image.file(
+                                      _profileImage!,
+                                      width: 100,
+                                      height: 100,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                          ),
                         ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 48), // To balance the back arrow
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Profile picture area with camera icon overlay
-            Center(
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.08),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
+                        Positioned(
+                          bottom: 6,
+                          right: 6,
+                          child: GestureDetector(
+                            onTap: _showProfilePictureOptions,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF1A3C6B),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 2),
+                              ),
+                              padding: const EdgeInsets.all(5),
+                              child: const Icon(Icons.camera_alt, color: Colors.white, size: 18),
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                    child: const Icon(Icons.person, size: 70, color: Color(0xFF1A3C6B)),
                   ),
-                  Positioned(
-                    bottom: 8,
-                    right: 8,
-                    child: GestureDetector(
-                      onTap: _showProfilePictureOptions,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1A3C6B),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                        padding: const EdgeInsets.all(6),
-                        child: const Icon(Icons.camera_alt, color: Colors.white, size: 22),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const SizedBox(height: 24),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
+            const SizedBox(height: 70),
+            Center(
               child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  _buildProfileField(
-                    icon: Icons.person_outline,
-                    controller: nameController,
-                    label: 'Name',
-                  ),
-                  const SizedBox(height: 16),
-                  _buildProfileField(
-                    icon: Icons.phone_outlined,
-                    controller: phoneController,
-                    label: 'Phone',
-                    keyboardType: TextInputType.phone,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildProfileField(
-                    icon: Icons.email_outlined,
-                    controller: emailController,
-                    label: 'Email',
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildProfileField(
-                    icon: Icons.remove_red_eye_outlined,
-                    controller: passwordController,
-                    label: 'Password',
-                    obscureText: true,
-                  ),
-                  const SizedBox(height: 32),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1A3C6B),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                  if (!isEditing) ...[
+                    _staticProfileInfoRow(Icons.person_outline, nameController.text),
+                    const SizedBox(height: 18),
+                    _staticProfileInfoRow(Icons.phone_outlined, phoneController.text),
+                    const SizedBox(height: 18),
+                    _staticProfileInfoRow(Icons.email_outlined, emailController.text),
+                    const SizedBox(height: 18),
+                    _staticProfileInfoRow(Icons.remove_red_eye_outlined, passwordController.text),
+                    const SizedBox(height: 36),
+                    SizedBox(
+                      width: 160,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1A3C6B),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 4,
+                          shadowColor: Colors.black.withOpacity(0.2),
                         ),
+                        onPressed: () {
+                          setState(() {
+                            isEditing = true;
+                          });
+                        },
+                        child: const Text('Edit Profile', style: TextStyle(fontSize: 16, color: Colors.white)),
                       ),
-                      onPressed: () {
-                        // Save logic here
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => const ProfilePage()),
-                        );
-                      },
-                      child: const Text('Save', style: TextStyle(fontSize: 18, color: Colors.white)),
                     ),
-                  ),
-                  const SizedBox(height: 24),
+                  ],
+                  if (isEditing) ...[
+                    _buildProfileField(icon: Icons.person_outline, controller: nameController, label: 'Name'),
+                    const SizedBox(height: 18),
+                    _buildProfileField(icon: Icons.phone_outlined, controller: phoneController, label: 'Phone', keyboardType: TextInputType.phone),
+                    const SizedBox(height: 18),
+                    _buildProfileField(icon: Icons.email_outlined, controller: emailController, label: 'Email', keyboardType: TextInputType.emailAddress),
+                    const SizedBox(height: 18),
+                    _buildProfileField(icon: Icons.remove_red_eye_outlined, controller: passwordController, label: 'Password', obscureText: true),
+                    const SizedBox(height: 36),
+                    SizedBox(
+                      width: 160,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1A3C6B),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 4,
+                          shadowColor: Colors.black.withOpacity(0.2),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            isEditing = false;
+                          });
+                        },
+                        child: const Text('Save', style: TextStyle(fontSize: 16, color: Colors.white)),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 32),
                 ],
               ),
             ),
@@ -235,6 +305,36 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
             style: const TextStyle(fontSize: 16),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _staticProfileInfoRow(IconData icon, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(6),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 2,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(10),
+          child: Icon(icon, color: Colors.black, size: 22),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(fontSize: 16, color: Color(0xFF23272F)),
           ),
         ),
       ],
@@ -286,5 +386,22 @@ class _ProfilePageState extends State<ProfilePage> {
         }
       },
     );
+  }
+}
+
+class ProfileCurveClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.lineTo(0, size.height - 100); // Start from the bottom left
+    path.quadraticBezierTo(size.width / 2, size.height, size.width, size.height - 100); // Curve up to the top right
+    path.lineTo(size.width, 0); // Line to the top right
+    path.lineTo(0, 0); // Line to the bottom left
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) {
+    return false;
   }
 }
