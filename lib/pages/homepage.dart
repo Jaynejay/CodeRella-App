@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
-import '../widgets/subject_card.dart';
 import '../widgets/simple_calendar.dart';
+import '../widgets/subject_card.dart';
+import 'add_submission_page.dart';
+import 'notification_page.dart';
+import 'profile_page.dart';
+import 'login_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,14 +17,15 @@ class _HomePageState extends State<HomePage> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
+  // Your subject data
   final List<Map<String, String>> subjects = [
     {
-      'imageUrl': 'https://images.unsplash.com/photo-1464983953574-0892a716854b',
+      'imageUrl': 'assets/agerii2.jpg',
       'nvqLevel': 'NVQ 4',
       'subjectName': 'A01S018F4.0 - Plant Tissue Culture Laboratory Assistant',
     },
     {
-      'imageUrl': 'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
+      'imageUrl': 'assets/agri.jpeg',
       'nvqLevel': 'NVQ 6',
       'subjectName': 'SUB-O3-Plantation & Export Agricultural Crop Production',
     },
@@ -29,49 +34,82 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xF2EDE6E3),
+      backgroundColor: const Color(0xFFF7F2F0), // Light background color from image
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+        child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  const Icon(Icons.arrow_back, size: 28),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Hi, Dinux👋',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
-                  ),
-                  const Spacer(),
-                  CircleAvatar(
-                    backgroundImage: NetworkImage('https://randomuser.me/api/portraits/men/1.jpg'),
-                    radius: 22,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              TextField(
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.menu),
-                  hintText: 'Hinted search text',
-                  filled: true,
-                  fillColor: Colors.grey[200],
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
-                  suffixIcon: const Icon(Icons.search),
+              // Header Section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, size: 28, color: Colors.black),
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const LoginPage()),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Hi, Dinux👋',
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
+                    ),
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const ProfilePage()),
+                        );
+                      },
+                      child: const CircleAvatar(
+                        backgroundImage: AssetImage('assets/man.jpg'),
+                        radius: 22,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+
+              // Search Bar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                child: TextField(
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.menu),
+                    hintText: 'Hinted search text',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      borderSide: BorderSide.none,
+                    ),
+                    suffixIcon: const Icon(Icons.search),
+                  ),
+                ),
+              ),
+
               const SizedBox(height: 18),
-              const Text(
-                'My Subjects',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 18),
+                child: Text(
+                  'My Subjects',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+                ),
               ),
               const SizedBox(height: 12),
+
+              // Subject Carousel with Overlaid Arrows
               Stack(
+                alignment: Alignment.center,
                 children: [
                   SizedBox(
-                    height: 320,
+                    height: 250, // Adjust height to fit your SubjectCard
                     child: PageView.builder(
                       controller: _pageController,
                       itemCount: subjects.length,
@@ -86,58 +124,106 @@ class _HomePageState extends State<HomePage> {
                           imageUrl: subject['imageUrl']!,
                           nvqLevel: subject['nvqLevel']!,
                           subjectName: subject['subjectName']!,
-                          calendar: const SimpleCalendar(),
                         );
                       },
                     ),
                   ),
+                  // Navigation Arrows
                   if (_currentPage > 0)
                     Positioned(
-                      left: 0,
-                      top: 100,
-                      child: GestureDetector(
-                        onTap: () {
-                          _pageController.previousPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-                        },
-                        child: CircleAvatar(
+                      left: 10,
+                      child: IconButton(
+                        icon: CircleAvatar(
                           backgroundColor: Colors.white,
-                          child: Icon(Icons.arrow_back_ios, color: Colors.blue[900]),
+                          child: const Icon(Icons.arrow_back_ios_new, color: Colors.black54),
                         ),
+                        onPressed: () {
+                          _pageController.previousPage(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          );
+                        },
                       ),
                     ),
                   if (_currentPage < subjects.length - 1)
                     Positioned(
-                      right: 0,
-                      top: 100,
-                      child: GestureDetector(
-                        onTap: () {
-                          _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-                        },
-                        child: CircleAvatar(
+                      right: 10,
+                      child: IconButton(
+                        icon: CircleAvatar(
                           backgroundColor: Colors.white,
-                          child: Icon(Icons.arrow_forward_ios, color: Colors.blue[900]),
+                          child: const Icon(Icons.arrow_forward_ios, color: Colors.black54),
                         ),
+                        onPressed: () {
+                          _pageController.nextPage(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          );
+                        },
                       ),
                     ),
                 ],
               ),
+
+              const SizedBox(height: 16),
+
+              // Static Calendar
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 18),
+                child: SimpleCalendar(),
+              ),
+
+              const SizedBox(height: 20),
             ],
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.cloud), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
-        ],
-        currentIndex: 0,
-        selectedItemColor: Colors.blue[900],
-        unselectedItemColor: Colors.black54,
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-      ),
+      bottomNavigationBar: buildBottomNavBar(context, 0),
     );
   }
+}
+
+Widget buildBottomNavBar(BuildContext context, int currentIndex) {
+  return BottomNavigationBar(
+    items: const [
+      BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+      BottomNavigationBarItem(icon: Icon(Icons.cloud_upload), label: 'Upload'),
+      BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Notifications'),
+      BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+    ],
+    currentIndex: currentIndex,
+    selectedItemColor: Colors.blue[900],
+    unselectedItemColor: Color(0xFF8A8A8A),
+    showSelectedLabels: false,
+    showUnselectedLabels: false,
+    type: BottomNavigationBarType.fixed,
+    onTap: (index) {
+      if (index == currentIndex) return;
+      switch (index) {
+        case 0:
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomePage()),
+          );
+          break;
+        case 1:
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const AddSubmissionPage()),
+          );
+          break;
+        case 2:
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const NotificationPage()),
+          );
+          break;
+        case 3:
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const ProfilePage()),
+          );
+          break;
+      }
+    },
+  );
 }

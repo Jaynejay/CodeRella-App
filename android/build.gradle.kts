@@ -1,10 +1,24 @@
+plugins {
+    id("com.android.library")
+    id("kotlin-android")
+}
+
+android {
+    compileSdk = 33
+
+    defaultConfig {
+        minSdk = 21
+        // Optional: Add targetSdk if needed
+        // targetSdk = 33
+    }
+
+    namespace = "com.mr.flutter.plugin.filepicker"
+}
+
 buildscript {
     repositories {
         google()
         mavenCentral()
-    }
-    dependencies {
-        classpath("com.google.gms:google-services:4.4.0")
     }
 }
 
@@ -15,6 +29,10 @@ allprojects {
     }
 }
 
+tasks.register<Delete>("clean") {
+    delete(rootProject.buildDir)
+}
+
 val newBuildDir: Directory = rootProject.layout.buildDirectory.dir("../../build").get()
 rootProject.layout.buildDirectory.value(newBuildDir)
 
@@ -22,10 +40,7 @@ subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
+
 subprojects {
     project.evaluationDependsOn(":app")
-}
-
-tasks.register<Delete>("clean") {
-    delete(rootProject.layout.buildDirectory)
 }
