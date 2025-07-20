@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
 import 'forgot_password2_page.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
@@ -11,7 +10,6 @@ class ForgotPasswordPage extends StatefulWidget {
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _emailController = TextEditingController();
-  final _authService = AuthService();
   bool _isLoading = false;
 
   @override
@@ -20,6 +18,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     super.dispose();
   }
 
+  // Replace Firebase logic with your own password reset logic
   Future<void> _handlePasswordReset() async {
     if (_isLoading) return;
 
@@ -28,18 +27,24 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     });
 
     try {
-      await _authService.resetPassword(_emailController.text);
+      // Replace this with your own password reset logic (e.g., an API call)
+      final isEmailValid = await _resetPassword(_emailController.text);
+      
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Password reset link sent to your email'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const ForgotPassword2Page()),
-        );
+        if (isEmailValid) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Password reset link sent to your email'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const ForgotPassword2Page()),
+          );
+        } else {
+          throw Exception('Email not found');
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -54,6 +59,16 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         });
       }
     }
+  }
+
+  // Example of a simple password reset method that you can replace with real logic
+  Future<bool> _resetPassword(String email) async {
+    // Replace this with your own logic for password reset (e.g., API call)
+    // This is a simple mock-up for illustration purposes
+    if (email == 'user@example.com') {
+      return true;
+    }
+    return false;
   }
 
   @override
@@ -72,7 +87,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               padding: const EdgeInsets.all(16.0),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 padding: const EdgeInsets.all(20),
@@ -123,25 +138,22 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           ),
                         ),
                         onPressed: _isLoading ? null : _handlePasswordReset,
-                        child:
-                            _isLoading
-                                ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white,
-                                    ),
-                                  ),
-                                )
-                                : const Text(
-                                  'NEXT',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                 ),
+                              )
+                            : const Text(
+                                'NEXT',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ),
                     ),
                   ],

@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:mobile_app/pages/login_page.dart';
-import 'pages/landing_page.dart';
-import 'pages/homepage.dart';
+// Screens
+import 'screens/user_list_screen.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+// Your pages
+import 'pages/landing_page.dart';
+import 'pages/login_page.dart';
+import 'pages/homepage.dart';
+import 'pages/add_submission_page.dart';
+import 'pages/upload_page.dart';
+
+void main() {
   runApp(const MyApp());
 }
 
@@ -28,7 +31,14 @@ class MyApp extends StatelessWidget {
         textTheme: GoogleFonts.poppinsTextTheme(),
         useMaterial3: true,
       ),
-      home: const LandingPage(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const LandingPage(),
+        '/login': (context) => const LoginPage(),
+        '/home': (context) => const HomePage(),
+        // from user_list_screen.dart
+        '/users': (context) => UserListScreen(), 
+      },
     );
   }
-} 
+}
