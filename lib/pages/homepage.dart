@@ -56,7 +56,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(width: 8),
                     const Text(
-                      'Hi, Dinux👋',
+                      'Hi, Imashi👋',
                       style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
                     ),
                     const Spacer(),
@@ -68,7 +68,7 @@ class _HomePageState extends State<HomePage> {
                         );
                       },
                       child: const CircleAvatar(
-                        backgroundImage: AssetImage('assets/man.jpg'),
+                        backgroundImage: AssetImage('assets/girl.jpg'),
                         radius: 22,
                       ),
                     ),

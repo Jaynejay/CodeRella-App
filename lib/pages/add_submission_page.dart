@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'upload_page.dart';
 import 'homepage.dart';
 import 'notification_page.dart';
 import 'profile_page.dart';
 
-class AddSubmissionPage extends StatelessWidget {
-  const AddSubmissionPage({super.key});
+class AddSubmissionPage extends StatefulWidget {
+  final DateTime? lastModified;
+  const AddSubmissionPage({super.key, this.lastModified});
 
+  @override
+  State<AddSubmissionPage> createState() => _AddSubmissionPageState();
+}
+
+class _AddSubmissionPageState extends State<AddSubmissionPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -104,16 +111,21 @@ class AddSubmissionPage extends StatelessWidget {
                           padding: const EdgeInsets.all(16),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Text('Submission Status :', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-                              SizedBox(height: 14),
-                              Text('Open Date    :   Saturday, 21 December 2024, 12:00 AM', style: TextStyle(fontSize: 14)),
-                              SizedBox(height: 10),
-                              Text('Due Date     :   Tuesday, 21 January 2024, 11:59 PM', style: TextStyle(fontSize: 14)),
-                              SizedBox(height: 10),
-                              Text('Last Modified :', style: TextStyle(fontSize: 14)),
-                              SizedBox(height: 10),
-                              Text('Submission Comment :', style: TextStyle(fontSize: 14)),
+                            children: [
+                              const Text('Submission Status :', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                              const SizedBox(height: 14),
+                              const Text('Open Date    :   Saturday, 21 December 2024, 12:00 AM', style: TextStyle(fontSize: 14)),
+                              const SizedBox(height: 10),
+                              const Text('Due Date     :   Tuesday, 21 January 2024, 11:59 PM', style: TextStyle(fontSize: 14)),
+                              const SizedBox(height: 10),
+                              Text(
+                                widget.lastModified != null
+                                    ? 'Last Modified : ${DateFormat('EEEE, d MMMM yyyy, hh:mm a').format(widget.lastModified!)}'
+                                    : 'Last Modified :',
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                              const SizedBox(height: 10),
+                              const Text('Submission Comment :', style: TextStyle(fontSize: 14)),
                             ],
                           ),
                         ),
@@ -130,7 +142,7 @@ class AddSubmissionPage extends StatelessWidget {
                               textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                             ),
                             onPressed: () {
-                              Navigator.push(
+                              Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(builder: (context) => const UploadPage()),
                               );

@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 
 class UserService {
   // Replace with your actual backend URL
-  final String baseUrl = 'http://10.0.2.2:8080/api'; // Android emulator localhost
+  final String baseUrl = 'http://localhost:8080'; // Android emulator localhost
   // For iOS simulator use 'http://localhost:8080'
   // For physical device use your computer's IP address like 'http://192.168.1.100:8080'
 

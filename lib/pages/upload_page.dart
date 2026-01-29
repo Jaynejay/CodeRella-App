@@ -1,11 +1,56 @@
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'add_submission_page.dart';
 import 'homepage.dart';
 import 'notification_page.dart';
 import 'profile_page.dart';
 
-class UploadPage extends StatelessWidget {
+class UploadPage extends StatefulWidget {
   const UploadPage({super.key});
+
+  @override
+  State<UploadPage> createState() => _UploadPageState();
+}
+
+class _UploadPageState extends State<UploadPage> {
+  File? _selectedFile;
+  Uint8List? _selectedFileBytes;
+  String? _fileName;
+
+  Future<void> _pickFile() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'doc', 'docx', 'jpg', 'png'],
+      );
+
+      if (result != null) {
+        if (kIsWeb) {
+          setState(() {
+            _selectedFileBytes = result.files.single.bytes;
+            _fileName = result.files.single.name;
+          });
+        } else {
+          // On mobile, a path should be available.
+          if (result.files.single.path != null) {
+            setState(() {
+              _selectedFile = File(result.files.single.path!);
+              _fileName = result.files.single.name;
+            });
+          }
+        }
+      }
+    } catch (e) {
+      // Handle exceptions
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error picking file: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +78,9 @@ class UploadPage extends StatelessWidget {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.black),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (context) => const HomePage()),
+                    ),
                   ),
                   const Expanded(
                     child: Center(
@@ -87,14 +134,14 @@ class UploadPage extends StatelessWidget {
                           Icons.folder_open,
                           color: Colors.black54,
                         ),
-                        onPressed: () {},
+                        onPressed: _pickFile,
                       ),
                       IconButton(
                         icon: const Icon(
                           Icons.insert_drive_file,
                           color: Colors.black54,
                         ),
-                        onPressed: () {},
+                        onPressed: _pickFile,
                       ),
                       const Spacer(),
                       IconButton(
@@ -111,32 +158,52 @@ class UploadPage extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 14),
-                  Container(
-                    width: double.infinity,
-                    height: 150,
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Colors.grey,
-                        style: BorderStyle.solid,
-                        width: 1,
+                  GestureDetector(
+                    onTap: _pickFile,
+                    child: Container(
+                      width: double.infinity,
+                      height: 150,
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: Colors.grey,
+                          style: BorderStyle.solid,
+                          width: 1,
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.white,
                       ),
-                      borderRadius: BorderRadius.circular(10),
-                      color: Colors.white,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(
-                          Icons.cloud_upload,
-                          size: 54,
-                          color: Colors.black38,
-                        ),
-                        SizedBox(height: 10),
-                        Text(
-                          'You can drag & drop file here to add them',
-                          style: TextStyle(color: Colors.black54, fontSize: 15),
-                        ),
-                      ],
+                      child: _selectedFile == null && _selectedFileBytes == null
+                          ? Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                Icon(
+                                  Icons.cloud_upload,
+                                  size: 54,
+                                  color: Colors.black38,
+                                ),
+                                SizedBox(height: 10),
+                                Text(
+                                  'You can drag & drop file here to add them',
+                                  style: TextStyle(color: Colors.black54, fontSize: 15),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            )
+                          : Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.check_circle, color: Colors.green, size: 54),
+                                const SizedBox(height: 10),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                                  child: Text(
+                                    'File Selected: $_fileName',
+                                    style: const TextStyle(color: Colors.black87, fontSize: 15),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ],
+                            ),
                     ),
                   ),
                   const SizedBox(height: 28),
@@ -156,13 +223,28 @@ class UploadPage extends StatelessWidget {
                             ),
                           ),
                           onPressed: () {
-                            // Later, you'll add file upload logic here
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const AddSubmissionPage(),
-                              ),
-                            );
+                            if (_selectedFile != null || _selectedFileBytes != null) {
+                              // Here you would typically upload the file
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Uploading $_fileName'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AddSubmissionPage(lastModified: DateTime.now()),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Please select a file first'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
                           },
                           child: const Text(
                             'Save changes',
@@ -231,10 +313,7 @@ class UploadPage extends StatelessWidget {
               );
               break;
             case 1:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const AddSubmissionPage()),
-              );
+              // Already on this page, do nothing.
               break;
             case 2:
               Navigator.pushReplacement(

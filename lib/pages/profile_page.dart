@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:typed_data';
 import 'homepage.dart';
 import 'add_submission_page.dart';
 import 'notification_page.dart';
@@ -14,20 +16,30 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   bool isEditing = false;
-  final TextEditingController nameController = TextEditingController(text: 'Dinux Fernando');
+  final TextEditingController nameController = TextEditingController(text: 'Imashi Fernando');
   final TextEditingController phoneController = TextEditingController(text: '0711234567');
-  final TextEditingController emailController = TextEditingController(text: 'abcd@gmail.com');
+  final TextEditingController emailController = TextEditingController(text: 'imashi@gmail.com');
   final TextEditingController passwordController = TextEditingController(text: 'password');
 
   File? _profileImage;
+  Uint8List? _profileImageBytes;
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickImage(ImageSource source) async {
     final pickedFile = await _picker.pickImage(source: source, imageQuality: 85);
     if (pickedFile != null) {
-      setState(() {
-        _profileImage = File(pickedFile.path);
-      });
+      if (kIsWeb) {
+        final bytes = await pickedFile.readAsBytes();
+        setState(() {
+          _profileImageBytes = bytes;
+          _profileImage = null; // Clear file to use bytes
+        });
+      } else {
+        setState(() {
+          _profileImage = File(pickedFile.path);
+          _profileImageBytes = null; // Clear bytes to use file
+        });
+      }
     }
   }
 
@@ -58,7 +70,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   await _pickImage(ImageSource.camera);
                 },
               ),
-              if (_profileImage != null)
+              if (_profileImage != null || _profileImageBytes != null)
                 ListTile(
                   leading: const Icon(Icons.remove_red_eye, color: Color(0xFF1A3C6B)),
                   title: const Text('See profile picture'),
@@ -70,7 +82,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(16),
-                          child: Image.file(_profileImage!, fit: BoxFit.cover),
+                          child: _profileImageBytes != null
+                              ? Image.memory(_profileImageBytes!, fit: BoxFit.cover)
+                              : Image.file(_profileImage!, fit: BoxFit.cover),
                         ),
                       ),
                     );
@@ -161,32 +175,26 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                               ],
                             ),
-                            child: _profileImage == null
-                                ? const Icon(Icons.person, size: 60, color: Color(0xFF1A3C6B))
+                            child: _profileImage == null && _profileImageBytes == null
+                                ? const CircleAvatar(
+                                    radius: 50,
+                                    backgroundImage: AssetImage('assets/girl.jpg'),
+                                  )
                                 : ClipOval(
-                                    child: Image.file(
-                                      _profileImage!,
-                                      width: 100,
-                                      height: 100,
-                                      fit: BoxFit.cover,
-                                    ),
+                                    child: _profileImageBytes != null
+                                        ? Image.memory(
+                                            _profileImageBytes!,
+                                            width: 100,
+                                            height: 100,
+                                            fit: BoxFit.cover,
+                                          )
+                                        : Image.file(
+                                            _profileImage!,
+                                            width: 100,
+                                            height: 100,
+                                            fit: BoxFit.cover,
+                                          ),
                                   ),
-                          ),
-                        ),
-                        Positioned(
-                          bottom: 6,
-                          right: 6,
-                          child: GestureDetector(
-                            onTap: _showProfilePictureOptions,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF1A3C6B),
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white, width: 2),
-                              ),
-                              padding: const EdgeInsets.all(5),
-                              child: const Icon(Icons.camera_alt, color: Colors.white, size: 18),
-                            ),
                           ),
                         ),
                       ],
